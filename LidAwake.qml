@@ -25,6 +25,14 @@ BarWidget {
 
   property bool active: false
 
+  // Conceal-until-hover, the behaviour the indicator cluster has. When the
+  // toggle is off it should not occupy the user's attention; hovering the bar
+  // reveals it. `barHovered` and `centerSectionHovered` are the Bar's own
+  // readonly state — this is the standalone equivalent of
+  // `indicatorHost.revealInactiveIndicators`.
+  readonly property bool revealed: !!root.bar
+    && (root.bar.barHovered === true || root.bar.centerSectionHovered === true)
+
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
@@ -36,6 +44,11 @@ BarWidget {
     active: root.active
     useActiveColor: true
     dimmed: !root.active
+    // On = always visible. Off = hidden until the bar is hovered, with the slot
+    // width kept so revealing it does not shift the clock sideways.
+    concealed: !root.active && !root.revealed
+    keepSpace: true
+    interactive: root.active || root.revealed
     // Omarchy's indicator convention: the inactive tooltip names the feature
     // ("Stay Awake", "Night Light"), the active one names what a click will do
     // ("Allow Idle Lock & Screensaver"). "Ignore Lid Close" was an imperative in
