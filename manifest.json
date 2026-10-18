@@ -5,14 +5,16 @@
   "version": "0.1.0",
   "author": "mutex-solutions",
   "license": "MIT",
-  "description": "Keep an Omarchy laptop working with the lid shut, from a bar toggle.",
-  "kinds": ["bar-widget"],
+  "description": "Keep the session awake and unlocked with the lid shut — no suspend, no lock, no screensaver.",
+  "kinds": [
+    "bar-widget"
+  ],
   "entryPoints": {
     "barWidget": "LidAwake.qml"
   },
   "barWidget": {
     "displayName": "Lid Awake",
-    "description": "Keep working with the lid shut until switched off",
+    "description": "Keep working with the lid shut",
     "category": "Power",
     "allowMultiple": false,
     "defaultSection": "center"
