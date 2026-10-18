@@ -1,10 +1,14 @@
 # Lid Awake
 
-**Close the lid. Keep working.**
+**Close the lid. Your agent keeps working.**
 
 Lid Awake keeps an Omarchy laptop awake *and unlocked* with the lid shut — no
-suspend, no lock screen, no screensaver. Close it, carry it, open it later: the
-build, the download, the agent session is exactly where you left it.
+suspend, no lock screen, no screensaver.
+
+Built for work you walk away from: an agent session, a build, a download. Shut
+the lid, bag the laptop, open it an hour later — still running, still unlocked,
+still exactly where you left it. Close the lid, come back to a finished job
+instead of a lock screen.
 
 Most lid plugins stop at suspend. This one also defeats the compositor's
 lid-close lock and the idle timer — the difference between *the process survived*

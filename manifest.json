@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "mutex-solutions",
   "license": "MIT",
-  "description": "Keep the session awake and unlocked with the lid shut — no suspend, no lock, no screensaver.",
+  "description": "Keep long-running work — an agent session, a build, a download — awake and unlocked with the lid shut.",
   "kinds": [
     "bar-widget"
   ],
