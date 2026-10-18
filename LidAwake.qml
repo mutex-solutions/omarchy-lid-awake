@@ -25,13 +25,16 @@ BarWidget {
 
   property bool active: false
 
-  // Conceal-until-hover, the behaviour the indicator cluster has. When the
-  // toggle is off it should not occupy the user's attention; hovering the bar
-  // reveals it. `barHovered` and `centerSectionHovered` are the Bar's own
-  // readonly state — this is the standalone equivalent of
-  // `indicatorHost.revealInactiveIndicators`.
-  readonly property bool revealed: !!root.bar
-    && (root.bar.barHovered === true || root.bar.centerSectionHovered === true)
+  // Conceal-until-hover, the behaviour the indicator cluster has.
+  //
+  // A third-party plugin does not receive the real Bar object — it gets
+  // PluginBarStateApi, which exposes only {barHidden, barSize, fontFamily,
+  // position}. There is no `barHovered` to bind to, so the reveal is driven by
+  // the widget's own slot instead: `keepSpace` keeps the slot in the layout
+  // while it is invisible, and the HoverHandler below covers it.
+  readonly property bool revealed: slotHover.hovered
+
+  HoverHandler { id: slotHover }
 
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
