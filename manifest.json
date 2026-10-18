@@ -12,7 +12,7 @@
   },
   "barWidget": {
     "displayName": "Lid Awake",
-    "description": "Ignore lid close until switched off",
+    "description": "Keep working with the lid shut until switched off",
     "category": "Power",
     "allowMultiple": false,
     "defaultSection": "center"
