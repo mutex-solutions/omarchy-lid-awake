@@ -36,7 +36,11 @@ BarWidget {
     active: root.active
     useActiveColor: true
     dimmed: !root.active
-    tooltipText: root.active ? "Restore lid close" : "Ignore lid close"
+    // Omarchy's indicator convention: the inactive tooltip names the feature
+    // ("Stay Awake", "Night Light"), the active one names what a click will do
+    // ("Allow Idle Lock & Screensaver"). "Ignore Lid Close" was an imperative in
+    // the slot that holds a name, and it disagreed with the plugin's own title.
+    tooltipText: root.active ? "Allow Lid Close" : "Lid Awake"
     onPressed: function(b) { if (b === 0) root.toggle() }
   }
 
