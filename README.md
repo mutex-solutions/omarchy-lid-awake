@@ -1,6 +1,6 @@
 # Lid Awake
 
-**Close the lid. Your agent keeps working.**
+**Close the lid. Your agent keeps working — on Omarchy.**
 
 Lid Awake keeps an Omarchy laptop awake *and unlocked* with the lid shut — no
 suspend, no lock screen, no screensaver.

@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "author": "mutex-solutions",
   "license": "MIT",
-  "description": "Keep long-running work — an agent session, a build, a download — awake and unlocked with the lid shut.",
+  "description": "Keep an Omarchy laptop awake and unlocked with the lid shut — agent sessions, builds and downloads keep running.",
   "kinds": [
     "bar-widget"
   ],
