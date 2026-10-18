@@ -15,6 +15,6 @@
     "description": "Ignore lid close until switched off",
     "category": "Power",
     "allowMultiple": false,
-    "defaultSection": "right"
+    "defaultSection": "center"
   }
 }
