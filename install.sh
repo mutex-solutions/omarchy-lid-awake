@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# lid-awake — install the lid toggle into the indicators cluster.
+# lid-awake: install the lid toggle into the indicators cluster.
 #
 # Omarchy has no extension point for third-party indicators. The cluster loads
 # exactly one path:
 #
 #     Qt.resolvedUrl("indicators/" + indicatorId + ".qml")
 #
-# — relative to its own directory, with no scan of other plugins and no
+# relative to its own directory, with no scan of other plugins and no
 # `kind: "indicator"`. So the only way to get the same experience as the
 # original (concealed when off, revealed on cluster hover, ordered with the
 # stock indicators) is to put the component inside a clone of that plugin and
@@ -40,7 +40,7 @@ warn() { printf '  ! %s\n' "$*" >&2; }
 die()  { printf 'lid-awake: %s\n' "$*" >&2; exit 1; }
 
 need() {
-  command -v "$1" >/dev/null 2>&1 || die "missing '$1' — is this an Omarchy machine?"
+  command -v "$1" >/dev/null 2>&1 || die "missing '$1'. Is this an Omarchy machine?"
 }
 
 need omarchy
@@ -57,11 +57,11 @@ install_lid_awake() {
   [ -f "$HELPER_SRC" ]    || die "missing $HELPER_SRC"
   [ -f "$INDICATOR_SRC" ] || die "missing $INDICATOR_SRC"
 
-  # 1 — the helper. The lid binding calls it by name, so it must be on PATH.
+  # 1. The helper. The lid binding calls it by name, so it must be on PATH.
   install -Dm755 "$HELPER_SRC" "$HELPER_DST"
   say "helper      -> $HELPER_DST"
 
-  # 2 — the indicators clone. `plugin clone` copies the stock plugin under
+  # 2. The indicators clone. `plugin clone` copies the stock plugin under
   #     <user>.indicators; it is not git-managed and will not be overwritten by
   #     Omarchy updates, which is exactly what makes it safe to patch.
   if [ ! -d "$CLONE" ]; then
@@ -73,11 +73,11 @@ install_lid_awake() {
   fi
   [ -d "$CLONE/indicators" ] || die "clone has no indicators/ directory: $CLONE"
 
-  # 3 — the component itself.
+  # 3. The component itself.
   install -Dm644 "$INDICATOR_SRC" "$CLONE_COMPONENT"
   say "component   -> indicators/$ENTRY.qml"
 
-  # 4 — register it. Append to the default list rather than rewriting the line,
+  # 4. Register it. Append to the default list rather than rewriting the line,
   #     so a user's own entries survive. `items` in shell.json would override
   #     this list entirely, so say so if one is set.
   if grep -q "\"$ENTRY\"" "$CLONE_LIST"; then
@@ -85,7 +85,7 @@ install_lid_awake() {
   else
     sed -i "/readonly property var defaultIndicatorEntries/ s/][[:space:]]*$/ , \"$ENTRY\" ]/" "$CLONE_LIST"
     grep -q "\"$ENTRY\"" "$CLONE_LIST" \
-      || die "could not register $ENTRY — edit $CLONE_LIST by hand and add \"$ENTRY\" to defaultIndicatorEntries"
+      || die "could not register $ENTRY. Edit $CLONE_LIST by hand and add \"$ENTRY\" to defaultIndicatorEntries"
     say "registered  -> defaultIndicatorEntries"
   fi
 
@@ -101,7 +101,7 @@ install_lid_awake() {
     warn "  omarchy bar set ${USER}.indicators items '<json array>' --json"
   fi
 
-  # 5 — exactly one cluster. Two widgets both drawing indicators is the failure
+  # 5. Exactly one cluster. Two widgets both drawing indicators is the failure
   #     mode that looks like the plugin doing nothing.
   if ! is_enabled "${USER}.indicators"; then
     omarchy plugin enable "${USER}.indicators" --section center >/dev/null 2>&1 \
@@ -116,14 +116,14 @@ install_lid_awake() {
     say "disabled    -> stock omarchy.indicators (one cluster only)"
   fi
 
-  # 6 — the lid binding. This is deliberately not edited automatically:
+  # 6. The lid binding. This is deliberately not edited automatically:
   #     rewriting someone's Hyprland config unattended is how sessions break.
   if grep -qs 'agent-mode lid-close' "$HOME/.config/hypr/bindings.lua"; then
     say "lid binding -> present"
   else
     cat <<'MSG'
 
-  ACTION REQUIRED — add this to ~/.config/hypr/bindings.lua:
+  ACTION REQUIRED: add this to ~/.config/hypr/bindings.lua:
 
       hl.unbind("switch:on:Lid Switch")
       o.bind("switch:on:Lid Switch", nil,
@@ -137,13 +137,13 @@ install_lid_awake() {
 MSG
   fi
 
-  # 7 — reload the shell so the new component is instantiated.
+  # 7. Reload the shell so the new component is instantiated.
   if [[ " $* " != *" --no-restart "* ]]; then
     omarchy restart shell >/dev/null 2>&1 || true
     say "shell       -> restarted"
   fi
 
-  echo "lid-awake: done — click the laptop icon in the indicator cluster."
+  echo "lid-awake: done. Click the laptop icon in the indicator cluster."
 }
 
 uninstall_lid_awake() {
@@ -185,5 +185,5 @@ case "${1:-install}" in
   -h|--help)
     sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     ;;
-  *) die "unknown option '$1' — try --help" ;;
+  *) die "unknown option '$1'. Try --help" ;;
 esac

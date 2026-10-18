@@ -4,7 +4,7 @@ import Quickshell.Io
 import qs.Ui
 import qs.Commons
 
-// Lid Awake — keep the machine working with the lid shut.
+// Lid Awake: keep the machine working with the lid shut.
 //
 // A standalone bar widget, not an entry in the indicators cluster: it is
 // installed on its own, so it must own its whole face. (BarIndicator would
@@ -12,7 +12,7 @@ import qs.Commons
 // here.)
 //
 // The state lives in the helper, not in this file. The widget reads
-// `agent-mode status` and never remembers a toggle it has not seen confirmed —
+// `agent-mode status` and never remembers a toggle it has not seen confirmed:
 // the inhibitor can be released from a terminal, by logind, or by the machine
 // suspending anyway, and a cached flag would then lie.
 BarWidget {
@@ -27,7 +27,7 @@ BarWidget {
 
   // Conceal-until-hover, the behaviour the indicator cluster has.
   //
-  // A third-party plugin does not receive the real Bar object — it gets
+  // A third-party plugin does not receive the real Bar object. It gets
   // PluginBarStateApi, which exposes only {barHidden, barSize, fontFamily,
   // position}. There is no `barHovered` to bind to, so the reveal is driven by
   // the widget's own slot instead: `keepSpace` keeps the slot in the layout
@@ -70,7 +70,7 @@ BarWidget {
 
   // The helper must be on PATH: the Hyprland lid binding calls it by name, so
   // `omarchy plugin add` alone would leave that binding broken. Install it from
-  // the plugin's own bin/ on load — idempotent, and only when it differs, so a
+  // the plugin's own bin/ on load: idempotent, and only when it differs, so a
   // running inhibitor is not disturbed on every shell start.
   Process {
     id: bootstrap

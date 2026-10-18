@@ -20,7 +20,7 @@ set -u
 # is already in flight, with no retry. Writing this flag there alongside
 # stay-awake raced it: the probe read before stay-awake existed, the second
 # event was swallowed, and the service sat at stayAwake=false with the lock
-# timer armed — the exact failure this mode exists to prevent.
+# timer armed. That is the exact failure this mode exists to prevent.
 STATE_DIR="$HOME/.local/state/agent-mode"
 STATE_FILE="$STATE_DIR/state"
 IDLE_FLAG="$HOME/.local/state/omarchy/indicators/stay-awake"

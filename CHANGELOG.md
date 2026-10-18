@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — 2026-10-18
+## 0.2.0 (2026-10-18)
 
 Install path that reproduces the original behaviour exactly.
 
@@ -19,11 +19,11 @@ Install path that reproduces the original behaviour exactly.
 - The standalone plugin (`omarchy plugin add`) stays, documented as the
   different-behaviour path: always visible, no hover reveal, no ordering.
 
-## 0.1.0 — 2026-10-18
+## 0.1.0 (2026-10-18)
 
 First release, extracted from the `sysadmin` homelab repo.
 
-- Standalone bar widget (`mutex-solutions.lid-awake`) — previously an entry
+- Standalone bar widget (`mutex-solutions.lid-awake`), previously an entry
   inside a cloned `omarchy.indicators` plugin, which meant it could not be
   installed without also cloning the indicators plugin.
 - `bin/agent-mode` ships with the plugin and is installed to `~/.local/bin`
