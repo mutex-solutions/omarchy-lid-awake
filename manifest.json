@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "mutex-solutions.lid-awake",
+  "name": "Lid Awake",
+  "version": "0.1.0",
+  "author": "mutex-solutions",
+  "license": "MIT",
+  "description": "Keep an Omarchy laptop working with the lid shut, from a bar toggle.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "LidAwake.qml"
+  },
+  "barWidget": {
+    "displayName": "Lid Awake",
+    "description": "Ignore lid close until switched off",
+    "category": "Power",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

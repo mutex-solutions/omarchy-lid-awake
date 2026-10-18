@@ -1,0 +1,163 @@
+#!/bin/bash
+# Agent mode: keep this machine fully awake and usable with the lid shut, so a
+# long-running agent session survives the laptop being closed.
+#
+# Three separate things put this machine to sleep or lock it, and each needs its
+# own defeat:
+#   1. logind suspends on lid close (HandleLidSwitch=suspend). A low-level
+#      handle-lid-switch inhibitor is always honored by logind, irrespective of
+#      LidSwitchIgnoreInhibited, so no root and no logind.conf edit is needed.
+#   2. Hyprland runs omarchy-system-lid-close on lid close, which LOCKS whenever
+#      no external monitor is attached. That is a compositor binding, unreachable
+#      from an inhibitor, so `agent-mode lid-close` below stands in for it.
+#   3. The omarchy.idle service fires the screensaver and then the lock on its own
+#      timers, which is what `omarchy-toggle-idle` governs.
+
+set -u
+
+# Deliberately NOT under ~/.local/state/omarchy/indicators. The shell's idle
+# service watches that directory, and its refresh is dropped whenever its probe
+# is already in flight, with no retry. Writing this flag there alongside
+# stay-awake raced it: the probe read before stay-awake existed, the second
+# event was swallowed, and the service sat at stayAwake=false with the lock
+# timer armed — the exact failure this mode exists to prevent.
+STATE_DIR="$HOME/.local/state/agent-mode"
+STATE_FILE="$STATE_DIR/state"
+IDLE_FLAG="$HOME/.local/state/omarchy/indicators/stay-awake"
+RUN_DIR="${XDG_RUNTIME_DIR:-/tmp/agent-mode-$UID}/agent-mode"
+PID_FILE="$RUN_DIR/inhibit-pid"
+WHO="Agent mode"
+# Only state changes are logged, never the status reads the bar makes every few
+# seconds. "Agent mode turned itself off while I was away" is the failure that
+# matters here, and this is what makes it answerable after the fact.
+LOG="$HOME/.local/state/omarchy/agent-mode.log"
+
+log() {
+  mkdir -p "$(dirname "$LOG")"
+  printf '%s %-6s pid=%s caller=%s\n' "$(date -Is)" "$1" "$$" \
+    "$(tr '\0\n\t' '   ' </proc/$PPID/cmdline 2>/dev/null | cut -c1-80)" >>"$LOG"
+}
+
+# A pid on its own is not proof: pids are reused, and killing a recycled one
+# would take down whatever inherited the number. Match the recorded start time
+# from /proc too, which a new process holding the same pid cannot share.
+proc_start_time() {
+  local pid="$1" stat rest
+  [[ -r /proc/$pid/stat ]] || return 1
+  stat=$(</proc/"$pid"/stat)
+  rest="${stat##*) }"
+  read -r -a rest <<<"$rest"
+  (( ${#rest[@]} > 19 )) || return 1
+  printf '%s\n' "${rest[19]}"
+}
+
+inhibitor_pid() {
+  local pid recorded current
+  [[ -s $PID_FILE ]] || return 1
+  read -r pid recorded <"$PID_FILE" || return 1
+  [[ $pid =~ ^[0-9]+$ && -n ${recorded:-} ]] || return 1
+  current=$(proc_start_time "$pid") || return 1
+  [[ $current == "$recorded" ]] || return 1
+  printf '%s\n' "$pid"
+}
+
+is_on() {
+  [[ -f $STATE_FILE ]] && inhibitor_pid >/dev/null
+}
+
+# A flag file with no live inhibitor is a half-on state: the lid would suspend
+# again while the idle timers stayed disabled, and nothing on the bar would say
+# so. A reboot produces exactly this, since the flag lives in ~/.local/state and
+# the pid file in XDG_RUNTIME_DIR. Settle it toward off rather than leaving the
+# machine in a shape neither setting describes.
+reconcile() {
+  [[ -f $STATE_FILE ]] || return 0
+  inhibitor_pid >/dev/null && return 0
+  log stale
+  turn_off
+}
+
+start_inhibitor() {
+  local pid start
+  inhibitor_pid >/dev/null && return 0
+
+  mkdir -p "$RUN_DIR"
+  # setsid detaches from the bar's fire-and-forget exec, which would otherwise
+  # take the inhibitor down with the shell that launched it.
+  setsid systemd-inhibit \
+    --what=handle-lid-switch:sleep:idle \
+    --who="$WHO" \
+    --why="Agent session running with the lid closed" \
+    --mode=block \
+    sleep infinity >/dev/null 2>&1 &
+  pid=$!
+  start=$(proc_start_time "$pid") || return 1
+  printf '%s %s\n' "$pid" "$start" >"$PID_FILE"
+}
+
+stop_inhibitor() {
+  local pid
+  if pid=$(inhibitor_pid); then
+    kill "$pid" 2>/dev/null || true
+  fi
+  rm -f "$PID_FILE"
+  rmdir "$RUN_DIR" 2>/dev/null || true
+}
+
+# One flag-file event per operation is all the idle service reliably sees, so
+# confirm the setting actually landed and nudge it again if it did not.
+sync_idle() {
+  local want="$1" attempt state
+  for attempt in 1 2 3 4 5 6; do
+    state=$(omarchy-shell idle status 2>/dev/null | grep -o '"stayAwake":[a-z]*' | cut -d: -f2)
+    # No shell running means nothing to sync toward; the flag file stands alone.
+    [[ -z $state || $state == "$want" ]] && return 0
+    sleep 0.3
+    if [[ $want == true ]]; then touch "$IDLE_FLAG"; else rm -f "$IDLE_FLAG"; fi
+  done
+  echo "agent-mode: idle service did not adopt stayAwake=$want" >&2
+  return 1
+}
+
+turn_on() {
+  mkdir -p "$STATE_DIR"
+  start_inhibitor || { echo "agent-mode: failed to take the lid/sleep inhibitor" >&2; return 1; }
+  touch "$STATE_FILE"
+  omarchy-toggle-idle stay-awake >/dev/null 2>&1 || true
+  sync_idle true
+}
+
+turn_off() {
+  stop_inhibitor
+  rm -f "$STATE_FILE"
+  omarchy-toggle-idle allow-idle >/dev/null 2>&1 || true
+  sync_idle false
+}
+
+case "${1:-toggle}" in
+  on|start)   log on; turn_on ;;
+  off|stop)   log off; turn_off ;;
+  toggle)     if is_on; then log off; turn_off; else log on; turn_on; fi ;;
+  status)
+    reconcile
+    if is_on; then
+      printf '{"enabled":true,"class":"enabled","text":"󰌢","tooltip":"Restore Lid Close"}\n'
+    else
+      printf '{"enabled":false,"class":"disabled","text":"󰌢","tooltip":"Ignore Lid Close"}\n'
+    fi
+    ;;
+  # Stands in for omarchy-system-lid-close on the Hyprland lid binding. Agent
+  # mode suppresses only the lock; the display reconcile still has to run, or a
+  # lid close while docked would leave the internal panel enabled behind it.
+  lid-close)
+    reconcile
+    if ! is_on && omarchy-hw-laptop-closed && ! omarchy-hw-external-monitors; then
+      omarchy-system-lock >/dev/null 2>&1 || true
+    fi
+    omarchy-hyprland-monitor-clamshell
+    ;;
+  *)
+    echo "Usage: agent-mode [on|off|toggle|status|lid-close]" >&2
+    exit 1
+    ;;
+esac
