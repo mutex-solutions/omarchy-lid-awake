@@ -62,6 +62,22 @@ hyprctl binds | grep -c 'switch:on:Lid Switch'   # must be 1
 Skip this and the machine stays awake but still locks, which is precisely the
 problem you installed it to avoid.
 
+## Inside Deck
+
+The same state is available as a Deck section:
+
+```bash
+omarchy plugin add https://github.com/mutex-solutions/omarchy-lid-awake
+```
+
+```json
+{ "id": "lidawake", "title": "Lid Awake",
+  "file": "/home/YOU/.config/omarchy/plugins/mutex-solutions.lid-awake/deck/Section.qml",
+  "page": "/home/YOU/.config/omarchy/plugins/mutex-solutions.lid-awake/deck/Page.qml" }
+```
+
+`install-bundle.sh` in the Deck repo wires this up with the other sections.
+
 ## Use it
 
 Click the laptop icon, or from a terminal:
