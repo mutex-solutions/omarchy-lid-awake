@@ -13,7 +13,7 @@ Item {
 
   readonly property bool active: enabled
   readonly property string label: "Lid Awake"
-  readonly property string detail: enabled ? "lid close does nothing" : "off"
+  readonly property string detail: enabled ? "lid ignored" : "off"
   readonly property string icon: "󰌢"
 
   function refresh() {
