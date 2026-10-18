@@ -141,9 +141,9 @@ case "${1:-toggle}" in
   status)
     reconcile
     if is_on; then
-      printf '{"enabled":true,"class":"enabled","text":"󰌢","tooltip":"Restore Lid Close"}\n'
+      printf '{"enabled":true,"class":"enabled","text":"󰌢","tooltip":"Allow Lid Close"}\n'
     else
-      printf '{"enabled":false,"class":"disabled","text":"󰌢","tooltip":"Ignore Lid Close"}\n'
+      printf '{"enabled":false,"class":"disabled","text":"󰌢","tooltip":"Lid Awake"}\n'
     fi
     ;;
   # Stands in for omarchy-system-lid-close on the Hyprland lid binding. Agent
