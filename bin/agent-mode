@@ -24,6 +24,7 @@ set -u
 STATE_DIR="$HOME/.local/state/agent-mode"
 STATE_FILE="$STATE_DIR/state"
 IDLE_FLAG="$HOME/.local/state/omarchy/indicators/stay-awake"
+IDLE_BEFORE="$STATE_DIR/idle-before"
 RUN_DIR="${XDG_RUNTIME_DIR:-/tmp/agent-mode-$UID}/agent-mode"
 PID_FILE="$RUN_DIR/inhibit-pid"
 WHO="Agent mode"
@@ -119,8 +120,27 @@ sync_idle() {
   return 1
 }
 
+idle_current() {
+  local state
+  state=$(omarchy-shell idle status 2>/dev/null | grep -o '"stayAwake":[a-z]*' | cut -d: -f2)
+  if [[ $state == true || $state == false ]]; then
+    printf '%s\n' "$state"
+  elif [[ -f $IDLE_FLAG ]]; then
+    printf 'true\n'
+  else
+    printf 'false\n'
+  fi
+}
+
+remember_idle() {
+  [[ -f $IDLE_BEFORE ]] && return 0
+  idle_current >"$IDLE_BEFORE"
+}
+
 turn_on() {
+  is_on && return 0
   mkdir -p "$STATE_DIR"
+  remember_idle
   start_inhibitor || { echo "agent-mode: failed to take the lid/sleep inhibitor" >&2; return 1; }
   touch "$STATE_FILE"
   omarchy-toggle-idle stay-awake >/dev/null 2>&1 || true
@@ -128,10 +148,20 @@ turn_on() {
 }
 
 turn_off() {
+  local idle=false
   stop_inhibitor
   rm -f "$STATE_FILE"
-  omarchy-toggle-idle allow-idle >/dev/null 2>&1 || true
-  sync_idle false
+  if [[ -f $IDLE_BEFORE ]]; then
+    read -r idle <"$IDLE_BEFORE"
+    [[ $idle == true ]] || idle=false
+    rm -f "$IDLE_BEFORE"
+  fi
+  if [[ $idle == true ]]; then
+    omarchy-toggle-idle stay-awake >/dev/null 2>&1 || true
+  else
+    omarchy-toggle-idle allow-idle >/dev/null 2>&1 || true
+  fi
+  sync_idle "$idle"
 }
 
 case "${1:-toggle}" in
@@ -140,10 +170,14 @@ case "${1:-toggle}" in
   toggle)     if is_on; then log off; turn_off; else log on; turn_on; fi ;;
   status)
     reconcile
-    if is_on; then
-      printf '{"enabled":true,"class":"enabled","text":"󰌢","tooltip":"Allow Lid Close"}\n'
+    enabled=false; idle=; binding=false
+    is_on && enabled=true
+    idle=$(idle_current)
+    if grep -R -q -F 'agent-mode lid-close' "$HOME/.config/hypr" 2>/dev/null; then binding=true; fi
+    if [[ $enabled == true ]]; then
+      printf '{"enabled":true,"class":"enabled","text":"󰌢","tooltip":"Allow Lid Close","idleStayAwake":%s,"binding":%s}\n' "$idle" "$binding"
     else
-      printf '{"enabled":false,"class":"disabled","text":"󰌢","tooltip":"Lid Awake"}\n'
+      printf '{"enabled":false,"class":"disabled","text":"󰌢","tooltip":"Lid Awake","idleStayAwake":%s,"binding":%s}\n' "$idle" "$binding"
     fi
     ;;
   # Stands in for omarchy-system-lid-close on the Hyprland lid binding. Agent

@@ -83,7 +83,8 @@ omarchy plugin add https://github.com/mutex-solutions/omarchy-lid-awake
 Click the laptop icon, or from a terminal:
 
 ```bash
-agent-mode                       # {"enabled":false,...}
+agent-mode                       # toggle
+agent-mode status                # {"enabled":false,...}
 agent-mode on | off | toggle
 agent-mode lid-close             # what the Hyprland binding calls
 ```
@@ -115,6 +116,13 @@ default and a plain user inhibitor still wins.
   `~/.local/state/omarchy/indicators`.** The shell's idle service watches that
   directory and drops refreshes while its probe is in flight; writing there
   raced it and left `stayAwake=false` with the lock timer armed.
+- **Your previous idle preference is restored.** Enabling Lid Awake records whether
+  Omarchy's Stay Awake was already on. Turning it off returns to that state instead
+  of unconditionally enabling idle locking. The saved value is in
+  `~/.local/state/agent-mode/idle-before` only while the mode is active.
+- **The Deck page shows health, not just a toggle.** `agent-mode status` reports the
+  live inhibitor, idle Stay Awake state, and whether the Hyprland lid binding is
+  installed. The page shows all three and disables repeated toggles while one runs.
 - **No dependencies beyond Omarchy.** `systemd-inhibit`, `loginctl`, and
   Omarchy's own helpers. No Python, no root, no extra packages.
 

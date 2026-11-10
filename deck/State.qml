@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Commons
 
 // Lid Awake state, as a Deck section.
 //
@@ -9,10 +10,17 @@ import Quickshell.Io
 Item {
   id: s
 
+  Translations { id: strings; directory: Qt.resolvedUrl("../i18n") }
+
   property bool enabled: false
+  property bool idleStayAwake: false
+  property bool binding: false
+  readonly property bool busy: toggleProc.running
+  readonly property string pluginDir: Quickshell.env("HOME") + "/.config/omarchy/plugins/mutex-solutions.lid-awake"
+  readonly property string helperPath: Quickshell.env("HOME") + "/.local/bin/agent-mode"
 
   readonly property bool active: enabled
-  readonly property string label: "Lid Awake"
+  readonly property string label: strings.t("lid-awake.lidAwake")
   readonly property string detail: enabled ? "lid ignored" : "off"
   readonly property string icon: "󰌢"
 
@@ -24,14 +32,25 @@ Item {
     if (!toggleProc.running) toggleProc.running = true
   }
 
+  // Deck-only installs need the helper too; the standalone widget is disabled.
+  Process {
+    id: bootstrap
+    command: ["bash", "-c", "cmp -s \"$1\" \"$2\" || install -Dm755 \"$1\" \"$2\"",
+      "lid-awake", s.pluginDir + "/bin/agent-mode", s.helperPath]
+    onExited: s.refresh()
+  }
+
   Process {
     id: statusProc
-    command: ["agent-mode", "status"]
+    command: [s.helperPath, "status"]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {
         try {
-          s.enabled = JSON.parse(text || "{}").enabled === true
+          var report = JSON.parse(text || "{}")
+          s.enabled = report.enabled === true
+          s.idleStayAwake = report.idleStayAwake === true
+          s.binding = report.binding === true
         } catch (e) {
         }
       }
@@ -40,7 +59,7 @@ Item {
 
   Process {
     id: toggleProc
-    command: ["agent-mode", "toggle"]
+    command: [s.helperPath, "toggle"]
     onExited: settleTimer.restart()
   }
 
@@ -64,5 +83,5 @@ Item {
     onTriggered: s.refresh()
   }
 
-  Component.onCompleted: refresh()
+  Component.onCompleted: if (!bootstrap.running) bootstrap.running = true
 }

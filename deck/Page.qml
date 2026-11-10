@@ -5,6 +5,8 @@ import qs.Commons
 Item {
   id: page
 
+  Translations { id: strings; directory: Qt.resolvedUrl("../i18n") }
+
   property var state: null
   property var host: null
 
@@ -29,7 +31,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: Style.space(8)
         anchors.verticalCenter: parent.verticalCenter
-        text: "Keep awake with the lid shut"
+        text: page.state && page.state.busy ? "Applying…" : "Keep awake with the lid shut"
         color: Color.foreground
         font.family: Style.font.family
         font.pixelSize: Style.font.body
@@ -57,8 +59,9 @@ Item {
 
         MouseArea {
           anchors.fill: parent
-          cursorShape: Qt.PointingHandCursor
-          onClicked: if (page.state) page.state.toggle()
+          enabled: page.state && !page.state.busy
+          cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+          onClicked: if (page.state && !page.state.busy) page.state.toggle()
         }
       }
     }
@@ -67,7 +70,7 @@ Item {
 
     Text {
       width: parent.width
-      text: "No suspend, no lock screen, no screensaver while the lid is shut. "
+      text: strings.t("lid-awake.noSuspendNoLockScreenNoScreensaverWhileTheLidIsShut")
           + "Requires the Hyprland lid binding; without it the machine stays "
           + "awake but still locks when closed."
       color: Util.alpha(Color.foreground, 0.5)
@@ -78,6 +81,37 @@ Item {
       rightPadding: Style.space(8)
       topPadding: Style.space(6)
       bottomPadding: Style.space(6)
+    }
+
+    Repeater {
+      model: page.state ? [
+        { label: strings.t("lid-awake.lidSleepInhibitor"), value: page.state.enabled ? "Active" : "Off", ok: page.state.enabled },
+        { label: strings.t("lid-awake.idleLockScreensaver"), value: page.state.idleStayAwake ? "Disabled" : "Enabled", ok: page.state.idleStayAwake },
+        { label: strings.t("lid-awake.hyprlandLidBinding"), value: page.state.binding ? "Installed" : "Missing", ok: page.state.binding }
+      ] : []
+      Item {
+        required property var modelData
+        width: parent.width
+        height: Style.space(22)
+        Text {
+          anchors.left: parent.left
+          anchors.leftMargin: Style.space(8)
+          anchors.verticalCenter: parent.verticalCenter
+          text: modelData.label
+          color: Util.alpha(Color.foreground, 0.55)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+        }
+        Text {
+          anchors.right: parent.right
+          anchors.rightMargin: Style.space(8)
+          anchors.verticalCenter: parent.verticalCenter
+          text: modelData.value
+          color: page.state.enabled && !modelData.ok ? Color.urgent : Util.alpha(Color.foreground, 0.55)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+        }
+      }
     }
   }
 }

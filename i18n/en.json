@@ -1,0 +1,7 @@
+{
+  "lid-awake.hyprlandLidBinding": "Hyprland lid binding",
+  "lid-awake.idleLockScreensaver": "Idle lock & screensaver",
+  "lid-awake.lidAwake": "Lid Awake",
+  "lid-awake.lidSleepInhibitor": "Lid/sleep inhibitor",
+  "lid-awake.noSuspendNoLockScreenNoScreensaverWhileTheLidIsShut": "No suspend, no lock screen, no screensaver while the lid is shut. "
+}

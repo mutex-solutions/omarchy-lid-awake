@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Turning Lid Awake off restores the Stay Awake preference that existed before
+  it was enabled instead of always forcing idle locking back on.
+- Repeated `on` calls no longer overwrite that saved preference.
+- Deck-only installs bootstrap the same helper as the standalone widget. The page
+  shows inhibitor, idle-lock and Hyprland-binding health, plus busy feedback.
+- The UI ships an English translation catalog with live language bindings.
+
 ## 0.2.0 (2026-10-18)
 
 Install path that reproduces the original behaviour exactly.
